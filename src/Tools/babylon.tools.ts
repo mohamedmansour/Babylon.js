@@ -3,6 +3,33 @@
         animations: Array<Animation>;
     }
 
+    // See https://stackoverflow.com/questions/12915412/how-do-i-extend-a-host-object-e-g-error-in-typescript
+    // and https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+    export class LoadFileError extends Error {
+        // Polyfill for Object.setPrototypeOf if necessary.
+        private static _setPrototypeOf: (o: any, proto: object | null) => any =
+            (Object as any).setPrototypeOf || ((o, proto) => { o.__proto__ = proto; return o; });
+
+        constructor(message: string, public request?: XMLHttpRequest) {
+            super(message);
+            this.name = "LoadFileError";
+
+            LoadFileError._setPrototypeOf(this, LoadFileError.prototype);
+        }
+    }
+
+    export class RetryStrategy {
+        public static ExponentialBackoff(maxRetries = 3, baseInterval = 500) {
+            return (url: string, request: XMLHttpRequest, retryIndex: number): number => {
+                if (request.status !== 0 || retryIndex >= maxRetries || url.indexOf("file:") !== -1) {
+                    return -1;
+                }
+
+                return Math.pow(2, retryIndex) * baseInterval;
+            };
+        }
+    }
+
     // Screenshots
     var screenshotCanvas: HTMLCanvasElement;
 
@@ -24,7 +51,15 @@
 
     export class Tools {
         public static BaseUrl = "";
-        public static CorsBehavior: any = "anonymous";
+        public static DefaultRetryStrategy = RetryStrategy.ExponentialBackoff();
+
+        /**
+         * Default behaviour for cors in the application.
+         * It can be a string if the expected behavior is identical in the entire app.
+         * Or a callback to be able to set it per url or on a group of them (in case of Video source for instance)
+         */
+        public static CorsBehavior: string | ((url: string | string[]) => string) = "anonymous";
+
         public static UseFallbackTexture = true;
 
         /**
@@ -34,7 +69,7 @@
         public static RegisteredExternalClasses: { [key: string]: Object } = {};
 
         // Used in case of a texture loading problem 
-        public static fallbackTexture = "data:image/jpg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4QBmRXhpZgAATU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAAExAAIAAAAQAAAATgAAAAAAAABgAAAAAQAAAGAAAAABcGFpbnQubmV0IDQuMC41AP/bAEMABAIDAwMCBAMDAwQEBAQFCQYFBQUFCwgIBgkNCw0NDQsMDA4QFBEODxMPDAwSGBITFRYXFxcOERkbGRYaFBYXFv/bAEMBBAQEBQUFCgYGChYPDA8WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFv/AABEIAQABAAMBIgACEQEDEQH/xAAfAAABBQEBAQEBAQAAAAAAAAAAAQIDBAUGBwgJCgv/xAC1EAACAQMDAgQDBQUEBAAAAX0BAgMABBEFEiExQQYTUWEHInEUMoGRoQgjQrHBFVLR8CQzYnKCCQoWFxgZGiUmJygpKjQ1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4eLj5OXm5+jp6vHy8/T19vf4+fr/xAAfAQADAQEBAQEBAQEBAAAAAAAAAQIDBAUGBwgJCgv/xAC1EQACAQIEBAMEBwUEBAABAncAAQIDEQQFITEGEkFRB2FxEyIygQgUQpGhscEJIzNS8BVictEKFiQ04SXxFxgZGiYnKCkqNTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqCg4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2dri4+Tl5ufo6ery8/T19vf4+fr/2gAMAwEAAhEDEQA/APH6KKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FCiiigD6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++gooooA+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gUKKKKAPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76CiiigD5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BQooooA+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/voKKKKAPl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FCiiigD6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++gooooA+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gUKKKKAPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76CiiigD5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BQooooA+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/voKKKKAPl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FCiiigD6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++gooooA+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gUKKKKAPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76P//Z";;
+        public static fallbackTexture = "data:image/jpg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4QBmRXhpZgAATU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAAExAAIAAAAQAAAATgAAAAAAAABgAAAAAQAAAGAAAAABcGFpbnQubmV0IDQuMC41AP/bAEMABAIDAwMCBAMDAwQEBAQFCQYFBQUFCwgIBgkNCw0NDQsMDA4QFBEODxMPDAwSGBITFRYXFxcOERkbGRYaFBYXFv/bAEMBBAQEBQUFCgYGChYPDA8WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFv/AABEIAQABAAMBIgACEQEDEQH/xAAfAAABBQEBAQEBAQAAAAAAAAAAAQIDBAUGBwgJCgv/xAC1EAACAQMDAgQDBQUEBAAAAX0BAgMABBEFEiExQQYTUWEHInEUMoGRoQgjQrHBFVLR8CQzYnKCCQoWFxgZGiUmJygpKjQ1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4eLj5OXm5+jp6vHy8/T19vf4+fr/xAAfAQADAQEBAQEBAQEBAAAAAAAAAQIDBAUGBwgJCgv/xAC1EQACAQIEBAMEBwUEBAABAncAAQIDEQQFITEGEkFRB2FxEyIygQgUQpGhscEJIzNS8BVictEKFiQ04SXxFxgZGiYnKCkqNTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqCg4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2dri4+Tl5ufo6ery8/T19vf4+fr/2gAMAwEAAhEDEQA/APH6KKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FCiiigD6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++gooooA+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gUKKKKAPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76CiiigD5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BQooooA+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/voKKKKAPl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FCiiigD6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++gooooA+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gUKKKKAPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76CiiigD5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BQooooA+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/voKKKKAPl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FCiiigD6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++gooooA+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gUKKKKAPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76Pl+iiivuj+BT6gooor4U/vo+X6KKK+6P4FPqCiiivhT++j5fooor7o/gU+oKKKK+FP76P//Z";
 
         /**
 		 * Interpolates between a and b via alpha
@@ -150,6 +185,14 @@
                 return path;
 
             return path.substring(index + 1);
+        }
+
+        public static GetFolderPath(uri: string): string {
+            var index = uri.lastIndexOf("/");
+            if (index < 0)
+                return "";
+
+            return uri.substring(0, index + 1);
         }
 
         public static GetDOMTextContent(element: HTMLElement): string {
@@ -376,19 +419,20 @@
             }
         }
 
-        public static SetCorsBehavior(url: string, img: HTMLImageElement): void {
+        public static SetCorsBehavior(url: string | string[], element: { crossOrigin: string | null }): void {
+            if (url && url.indexOf("data:") === 0) {
+                return;
+            }
+
             if (Tools.CorsBehavior) {
-                switch (typeof (Tools.CorsBehavior)) {
-                    case "function":
-                        var result = Tools.CorsBehavior(url);
-                        if (result) {
-                            img.crossOrigin = result;
-                        }
-                        break;
-                    case "string":
-                    default:
-                        img.crossOrigin = Tools.CorsBehavior;
-                        break;
+                if (typeof (Tools.CorsBehavior) === 'string' || Tools.CorsBehavior instanceof String) {
+                    element.crossOrigin = <string>Tools.CorsBehavior;
+                }
+                else {
+                    var result = Tools.CorsBehavior(url);
+                    if (result) {
+                        element.crossOrigin = result;
+                    }
                 }
             }
         }
@@ -413,10 +457,7 @@
             url = Tools.PreprocessUrl(url);
 
             var img = new Image();
-
-            if (url.substr(0, 5) !== "data:") {
-                Tools.SetCorsBehavior(url, img);
-            }
+            Tools.SetCorsBehavior(url, img);
 
             img.onload = () => {
                 onLoad(img);
@@ -425,10 +466,7 @@
             img.onerror = err => {
                 Tools.Error("Error while trying to load image: " + url);
 
-                if (Tools.UseFallbackTexture) {
-                    img.src = Tools.fallbackTexture;
-                    onLoad(img);
-                } else {
+                if (onError) {
                     onError("Error while trying to load image: " + url, err);
                 }
             };
@@ -449,10 +487,7 @@
                 database.openAsync(loadFromIndexedDB, noIndexedDB);
             }
             else {
-                if (url.indexOf("file:") !== 0) {
-                    noIndexedDB();
-                }
-                else {
+                if (url.indexOf("file:") !== -1) {
                     var textureName = decodeURIComponent(url.substring(5).toLowerCase());
                     if (FilesInput.FilesToLoad[textureName]) {
                         try {
@@ -469,28 +504,28 @@
                         catch (e) {
                             img.src = "";
                         }
-                    }
-                    else {
-                        Tools.Error("Image: " + textureName + " not found. Did you forget to provide it?");
-                        img.src = Tools.fallbackTexture;
+                        return img;
                     }
                 }
+
+                noIndexedDB();
             }
 
             return img;
         }
 
-        //ANY
-        public static LoadFile(url: string, callback: (data: any) => void, progressCallBack?: (data: any) => void, database?: Database, useArrayBuffer?: boolean, onError?: (request?: XMLHttpRequest, exception?: any) => void): Nullable<XMLHttpRequest> {
+        public static LoadFile(url: string, callback: (data: string | ArrayBuffer, responseURL?: string) => void, progressCallBack?: (data: any) => void, database?: Database, useArrayBuffer?: boolean, onError?: (request?: XMLHttpRequest, exception?: any) => void, onRetry?: (oldRequest: XMLHttpRequest, newRequest: XMLHttpRequest) => void, retryStrategy: Nullable<(url: string, request: XMLHttpRequest, retryIndex: number) => number> = null): Nullable<XMLHttpRequest> {
             url = Tools.CleanUrl(url);
 
             url = Tools.PreprocessUrl(url);
 
-            var request: Nullable<XMLHttpRequest> = null;
+            let request: Nullable<XMLHttpRequest> = null;
 
-            var noIndexedDB = () => {
+            let noIndexedDB = (retryIndex?: number) => {
+                let oldRequest = request;
                 request = new XMLHttpRequest();
-                var loadUrl = Tools.BaseUrl + url;
+
+                let loadUrl = Tools.BaseUrl + url;
                 request.open('GET', loadUrl, true);
 
                 if (useArrayBuffer) {
@@ -508,50 +543,56 @@
                         req.onreadystatechange = () => { };//some browsers have issues where onreadystatechange can be called multiple times with the same value
 
                         if (req.status >= 200 && req.status < 300 || (!Tools.IsWindowObjectExist() && (req.status === 0))) {
-                            callback(!useArrayBuffer ? req.responseText : req.response);
-                        } else { // Failed
-                            let e = new Error("Error status: " + req.status + " - Unable to load " + loadUrl);
-                            if (onError) {
-                                onError(req, e);
-                            } else {
-                                throw e;
+                            callback(!useArrayBuffer ? req.responseText : <ArrayBuffer>req.response, req.responseURL);
+                            return;
+                        }
+
+                        retryStrategy = retryStrategy || Tools.DefaultRetryStrategy;
+                        if (retryStrategy) {
+                            let waitTime = retryStrategy(loadUrl, req, retryIndex || 0);
+                            if (waitTime !== -1) {
+                                setTimeout(() => noIndexedDB((retryIndex || 0) + 1), waitTime);
+                                return;
                             }
+                        }
+
+                        let e = new Error("Error status: " + req.status + " - Unable to load " + loadUrl);
+                        if (onError) {
+                            onError(req, e);
+                        } else {
+                            throw e;
                         }
                     }
                 };
 
-                request.send(null);
+                request.send();
+
+                if (oldRequest && onRetry) {
+                    onRetry(oldRequest, request);
+                }
             };
 
-            var loadFromIndexedDB = () => {
+            let loadFromIndexedDB = () => {
                 if (database) {
                     database.loadFileFromDB(url, callback, progressCallBack, noIndexedDB, useArrayBuffer);
                 }
             };
 
+            // If file and file input are set
             if (url.indexOf("file:") !== -1) {
-                var fileName = decodeURIComponent(url.substring(5).toLowerCase());
+                let fileName = decodeURIComponent(url.substring(5).toLowerCase());
                 if (FilesInput.FilesToLoad[fileName]) {
                     Tools.ReadFile(FilesInput.FilesToLoad[fileName], callback, progressCallBack, useArrayBuffer);
-                }
-                else {
-                    let errorMessage = "File: " + fileName + " not found. Did you forget to provide it?";
-                    if (onError) {
-                        let e = new Error(errorMessage);
-                        onError(undefined, e);
-                    } else {
-                        Tools.Error(errorMessage);
-                    }
+                    return request;
                 }
             }
+
+            // Caching all files
+            if (database && database.enableSceneOffline) {
+                database.openAsync(loadFromIndexedDB, noIndexedDB);
+            }
             else {
-                // Caching all files
-                if (database && database.enableSceneOffline) {
-                    database.openAsync(loadFromIndexedDB, noIndexedDB);
-                }
-                else {
-                    noIndexedDB();
-                }
+                noIndexedDB();
             }
 
             return request;
@@ -696,14 +737,14 @@
             return true;
         }
 
-        public static RegisterTopRootEvents(events: { name: string; handler: EventListener }[]): void {
+        public static RegisterTopRootEvents(events: { name: string; handler: Nullable<(e: FocusEvent) => any> }[]): void {
             for (var index = 0; index < events.length; index++) {
                 var event = events[index];
-                window.addEventListener(event.name, event.handler, false);
+                window.addEventListener(event.name, <any>event.handler, false);
 
                 try {
                     if (window.parent) {
-                        window.parent.addEventListener(event.name, event.handler, false);
+                        window.parent.addEventListener(event.name, <any>event.handler, false);
                     }
                 } catch (e) {
                     // Silently fails...
@@ -711,14 +752,14 @@
             }
         }
 
-        public static UnregisterTopRootEvents(events: { name: string; handler: EventListener }[]): void {
+        public static UnregisterTopRootEvents(events: { name: string; handler: Nullable<(e: FocusEvent) => any> }[]): void {
             for (var index = 0; index < events.length; index++) {
                 var event = events[index];
-                window.removeEventListener(event.name, event.handler);
+                window.removeEventListener(event.name, <any>event.handler);
 
                 try {
                     if (window.parent) {
-                        window.parent.removeEventListener(event.name, event.handler);
+                        window.parent.removeEventListener(event.name, <any>event.handler);
                     }
                 } catch (e) {
                     // Silently fails...
@@ -726,7 +767,7 @@
             }
         }
 
-        public static DumpFramebuffer(width: number, height: number, engine: Engine, successCallback?: (data: string) => void, mimeType: string = "image/png"): void {
+        public static DumpFramebuffer(width: number, height: number, engine: Engine, successCallback?: (data: string) => void, mimeType: string = "image/png", fileName?: string): void {
             // Read the contents of the framebuffer
             var numberOfChannelsByLine = width * 4;
             var halfHeight = height / 2;
@@ -762,40 +803,67 @@
                 castData.set(data);
                 context.putImageData(imageData, 0, 0);
 
-                Tools.EncodeScreenshotCanvasData(successCallback, mimeType);
+                Tools.EncodeScreenshotCanvasData(successCallback, mimeType, fileName);
             }
         }
 
-        static EncodeScreenshotCanvasData(successCallback?: (data: string) => void, mimeType: string = "image/png") {
+        static EncodeScreenshotCanvasData(successCallback?: (data: string) => void, mimeType: string = "image/png", fileName?: string) {
             var base64Image = screenshotCanvas.toDataURL(mimeType);
-
             if (successCallback) {
                 successCallback(base64Image);
-            } else {
-                //Creating a link if the browser have the download attribute on the a tag, to automatically start download generated image.
-                if (("download" in document.createElement("a"))) {
-                    var a = window.document.createElement("a");
-                    a.href = base64Image;
-                    var date = new Date();
-                    var stringDate = (date.getFullYear() + "-" + (date.getMonth() + 1)).slice(-2) + "-" + date.getDate() + "_" + date.getHours() + "-" + ('0' + date.getMinutes()).slice(-2);
-                    a.setAttribute("download", "screenshot_" + stringDate + ".png");
+            }
+            else {
+                // We need HTMLCanvasElement.toBlob for HD screenshots
+                if (!screenshotCanvas.toBlob) {
+                    //  low performance polyfill based on toDataURL (https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob)
+                    screenshotCanvas.toBlob = function (callback, type, quality) {
+                        setTimeout(() => {
+                            var binStr = atob(this.toDataURL(type, quality).split(',')[1]),
+                                len = binStr.length,
+                                arr = new Uint8Array(len);
 
-                    window.document.body.appendChild(a);
-
-                    a.addEventListener("click", () => {
-                        if (a.parentElement) {
-                            a.parentElement.removeChild(a);
-                        }
-                    });
-                    a.click();
-
-                    //Or opening a new tab with the image if it is not possible to automatically start download.
-                } else {
-                    var newWindow = window.open("");
-                    var img = newWindow.document.createElement("img");
-                    img.src = base64Image;
-                    newWindow.document.body.appendChild(img);
+                            for (var i = 0; i < len; i++) {
+                                arr[i] = binStr.charCodeAt(i);
+                            }
+                            callback(new Blob([arr], { type: type || 'image/png' }));
+                        });
+                    }
                 }
+                screenshotCanvas.toBlob(function (blob) {
+                    var url = URL.createObjectURL(blob);
+                    //Creating a link if the browser have the download attribute on the a tag, to automatically start download generated image.
+                    if (("download" in document.createElement("a"))) {
+                        var a = window.document.createElement("a");
+                        a.href = url;
+                        if (fileName) {
+                            a.setAttribute("download", fileName);
+                        }
+                        else {
+                            var date = new Date();
+                            var stringDate = (date.getFullYear() + "-" + (date.getMonth() + 1)).slice(-2) + "-" + date.getDate() + "_" + date.getHours() + "-" + ('0' + date.getMinutes()).slice(-2);
+                            a.setAttribute("download", "screenshot_" + stringDate + ".png");
+                        }
+                        window.document.body.appendChild(a);
+                        a.addEventListener("click", () => {
+                            if (a.parentElement) {
+                                a.parentElement.removeChild(a);
+                            }
+                        });
+                        a.click();
+                    }
+                    else {
+                        var newWindow = window.open("");
+                        if (!newWindow) return;
+                        var img = newWindow.document.createElement("img");
+                        img.onload = function () {
+                            // no longer need to read the blob so it's revoked
+                            URL.revokeObjectURL(url);
+                        };
+                        img.src = url;
+                        newWindow.document.body.appendChild(img);
+                    }
+
+                });
             }
         }
 
@@ -860,7 +928,7 @@
             Tools.EncodeScreenshotCanvasData(successCallback, mimeType);
         }
 
-        public static CreateScreenshotUsingRenderTarget(engine: Engine, camera: Camera, size: any, successCallback?: (data: string) => void, mimeType: string = "image/png", samples: number = 1): void {
+        public static CreateScreenshotUsingRenderTarget(engine: Engine, camera: Camera, size: any, successCallback?: (data: string) => void, mimeType: string = "image/png", samples: number = 1, antialiasing: boolean = false, fileName?: string): void {
             var width: number;
             var height: number;
 
@@ -908,9 +976,11 @@
             var texture = new RenderTargetTexture("screenShot", size, scene, false, false, Engine.TEXTURETYPE_UNSIGNED_INT, false, Texture.NEAREST_SAMPLINGMODE);
             texture.renderList = null;
             texture.samples = samples;
-
+            if (antialiasing) {
+                texture.addPostProcess(new FxaaPostProcess('antialiasing', 1.0, scene.activeCamera));
+            }
             texture.onAfterRenderObservable.add(() => {
-                Tools.DumpFramebuffer(width, height, engine, successCallback, mimeType);
+                Tools.DumpFramebuffer(width, height, engine, successCallback, mimeType, fileName);
             });
 
             scene.incrementRenderId();

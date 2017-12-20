@@ -5,7 +5,7 @@
 
         public get effect(): Nullable<Effect> {
             return this._materialEffect;
-        }       
+        }
 
         public setEffect(effect: Nullable<Effect>, defines: Nullable<MaterialDefines> = null) {
             if (this._materialEffect === effect) {
@@ -16,7 +16,7 @@
             }
             this._materialDefines = defines;
             this._materialEffect = effect;
-        }         
+        }
     }
 
     export class SubMesh extends BaseSubMesh implements ICullable {
@@ -24,7 +24,7 @@
 
         private _mesh: AbstractMesh;
         private _renderingMesh: Mesh;
-        private _boundingInfo: Nullable<BoundingInfo>;
+        private _boundingInfo: BoundingInfo;
         private _linesIndexBuffer: Nullable<WebGLBuffer>;
         public _lastColliderWorldVertices: Nullable<Vector3[]>;
         public _trianglePlanes: Plane[];
@@ -64,7 +64,7 @@
         /**
          * Returns the submesh BoudingInfo object.  
          */
-        public getBoundingInfo(): Nullable<BoundingInfo> {
+        public getBoundingInfo(): BoundingInfo {
             if (this.IsGlobal) {
                 return this._mesh.getBoundingInfo();
             }
@@ -134,7 +134,7 @@
             var data = this._renderingMesh.getVerticesData(VertexBuffer.PositionKind);
 
             if (!data) {
-                this._boundingInfo = this._mesh._boundingInfo;
+                this._boundingInfo = this._mesh.getBoundingInfo();
                 return this;
             }
 
@@ -144,10 +144,6 @@
             //is this the only submesh?
             if (this.indexStart === 0 && this.indexCount === indices.length) {
                 let boundingInfo = this._renderingMesh.getBoundingInfo();
-
-                if (!boundingInfo) {
-                    return this;
-                }
 
                 //the rendering mesh's bounding info can be used, it is the standard submesh for all indices.
                 extend = { minimum: boundingInfo.minimum.clone(), maximum: boundingInfo.maximum.clone() };
@@ -161,10 +157,6 @@
         public _checkCollision(collider: Collider): boolean {
             let boundingInfo = this._renderingMesh.getBoundingInfo();
 
-            if (!boundingInfo) {
-                return false;
-            }
-
             return boundingInfo._checkCollision(collider);
         }
 
@@ -177,6 +169,7 @@
 
             if (!boundingInfo) {
                 this.refreshBoundingInfo();
+                boundingInfo = this.getBoundingInfo();
             }
             (<BoundingInfo>boundingInfo).update(world);
             return this;
@@ -188,23 +181,23 @@
          */
         public isInFrustum(frustumPlanes: Plane[]): boolean {
             let boundingInfo = this.getBoundingInfo();
-            
+
             if (!boundingInfo) {
                 return false;
-            }            
+            }
             return boundingInfo.isInFrustum(frustumPlanes);
         }
 
         /**
          * True is the submesh bounding box is completely inside the frustum defined by the passed array of planes.  
          * Boolean returned.  
-         */        
+         */
         public isCompletelyInFrustum(frustumPlanes: Plane[]): boolean {
             let boundingInfo = this.getBoundingInfo();
-            
+
             if (!boundingInfo) {
                 return false;
-            }                  
+            }
             return boundingInfo.isCompletelyInFrustum(frustumPlanes);
         }
 
@@ -243,10 +236,10 @@
          */
         public canIntersects(ray: Ray): boolean {
             let boundingInfo = this.getBoundingInfo();
-            
+
             if (!boundingInfo) {
                 return false;
-            }            
+            }
             return ray.intersectsBox(boundingInfo.boundingBox);
         }
 
@@ -257,7 +250,7 @@
             var intersectInfo: Nullable<IntersectionInfo> = null;
 
             // LineMesh first as it's also a Mesh...
-            if (this._mesh instanceof LinesMesh) {
+            if (LinesMesh && this._mesh instanceof LinesMesh) {
                 var lineMesh = <LinesMesh>this._mesh;
 
                 // Line test
@@ -323,10 +316,10 @@
 
             if (!this.IsGlobal) {
                 let boundingInfo = this.getBoundingInfo();
-                
+
                 if (!boundingInfo) {
                     return result;
-                }   
+                }
 
                 result._boundingInfo = new BoundingInfo(boundingInfo.minimum, boundingInfo.maximum);
             }

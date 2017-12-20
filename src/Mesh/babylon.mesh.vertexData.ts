@@ -323,7 +323,7 @@
             this.uvs4 = this._mergeElement(this.uvs4, other.uvs4, count * 2);
             this.uvs5 = this._mergeElement(this.uvs5, other.uvs5, count * 2);
             this.uvs6 = this._mergeElement(this.uvs6, other.uvs6, count * 2);
-            this.colors = this._mergeElement(this.colors, other.colors, count * 4);
+            this.colors = this._mergeElement(this.colors, other.colors, count * 4, 1);
             this.matricesIndices = this._mergeElement(this.matricesIndices, other.matricesIndices, count * 4);
             this.matricesWeights = this._mergeElement(this.matricesWeights, other.matricesWeights, count * 4);
             this.matricesIndicesExtra = this._mergeElement(this.matricesIndicesExtra, other.matricesIndicesExtra, count * 4);
@@ -331,21 +331,25 @@
             return this;
         }
 
-        private _mergeElement(source: Nullable<FloatArray>, other: Nullable<FloatArray>, length = 0): Nullable<FloatArray> {
+        private _mergeElement(source: Nullable<FloatArray>, other: Nullable<FloatArray>, length = 0, defaultValue = 0): Nullable<FloatArray> {
             if (!other && !source) {
                 return null;
             }
 
             if (!other) {
-                return this._mergeElement(source, new Float32Array((<FloatArray>source).length), length);
+                var padding = new Float32Array((<FloatArray>source).length);
+                padding.fill(defaultValue);
+                return this._mergeElement(source, padding, length);
             }
 
             if (!source) {
                 if (length === 0 || length === other.length) {
                     return other;
                 }
-
-                return this._mergeElement(new Float32Array(length - other.length), other, length);
+                
+                var padding = new Float32Array(length - other.length);
+                padding.fill(defaultValue);
+                return this._mergeElement(padding, other, length);
             }
 
             var len = other.length + source.length;
@@ -1265,17 +1269,22 @@
         /**
          * Creates the VertexData of the LineSystem.  
          */
-        public static CreateLineSystem(options: { lines: Vector3[][] }): VertexData {
+        public static CreateLineSystem(options: { lines: Vector3[][], colors?: Nullable<Color4[][]> }): VertexData {
             var indices = [];
             var positions = [];
             var lines = options.lines;
+            var colors = options.colors;
+            var vertexColors = [];
             var idx = 0;
 
             for (var l = 0; l < lines.length; l++) {
                 var points = lines[l];
                 for (var index = 0; index < points.length; index++) {
                     positions.push(points[index].x, points[index].y, points[index].z);
-
+                    if (colors) {
+                        var color = colors[l];
+                        vertexColors.push(color[index].r, color[index].g, color[index].b, color[index].a);
+                    }
                     if (index > 0) {
                         indices.push(idx - 1);
                         indices.push(idx);
@@ -1286,6 +1295,9 @@
             var vertexData = new VertexData();
             vertexData.indices = indices;
             vertexData.positions = positions;
+            if (colors) {
+                vertexData.colors = vertexColors;
+            }
             return vertexData;
         }
 
@@ -2216,9 +2228,14 @@
          * ratio : optional partitioning ratio / bounding box, required for facetPartitioning computation
          * bbSize : optional bounding box size data, required for facetPartitioning computation
          * bInfo : optional bounding info, required for facetPartitioning computation
+         * useRightHandedSystem: optional boolean to for right handed system computation
+         * depthSort : optional boolean to enable the facet depth sort computation
+         * distanceTo : optional Vector3 to compute the facet depth from this location
+         * depthSortedFacets : optional array of depthSortedFacets to store the facet distances from the reference location
          */
         public static ComputeNormals(positions: any, indices: any, normals: any,
-            options?: { facetNormals?: any, facetPositions?: any, facetPartitioning?: any, ratio?: number, bInfo?: any, bbSize?: Vector3, subDiv?: any, useRightHandedSystem?: boolean }): void {
+            options?: { facetNormals?: any, facetPositions?: any, facetPartitioning?: any, ratio?: number, bInfo?: any, bbSize?: Vector3, subDiv?: any, 
+                useRightHandedSystem?: boolean, depthSort?: boolean, distanceTo?: Vector3, depthSortedFacets?: any }): void {
 
             // temporary scalar variables
             var index = 0;                      // facet index     
@@ -2244,14 +2261,24 @@
             var computeFacetNormals = false;
             var computeFacetPositions = false;
             var computeFacetPartitioning = false;
+            var computeDepthSort = false;
             var faceNormalSign = 1;
             let ratio = 0;
+            var distanceTo: Nullable<Vector3> = null;
             if (options) {
                 computeFacetNormals = (options.facetNormals) ? true : false;
                 computeFacetPositions = (options.facetPositions) ? true : false;
                 computeFacetPartitioning = (options.facetPartitioning) ? true : false;
                 faceNormalSign = (options.useRightHandedSystem === true) ? -1 : 1;
                 ratio = options.ratio || 0;
+                computeDepthSort = (options.depthSort) ? true : false;
+                distanceTo = <Vector3>(options.distanceTo);
+                if (computeDepthSort) {
+                    if (distanceTo === undefined) {
+                        distanceTo = Vector3.Zero();
+                    } 
+                    var depthSortedFacets = options.depthSortedFacets;
+                }
             }
 
             // facetPartitioning reinit if needed
@@ -2292,7 +2319,7 @@
             }
 
             // Loop : 1 indice triplet = 1 facet
-            var nbFaces = indices.length / 3;
+            var nbFaces = (indices.length / 3)|0;
             for (index = 0; index < nbFaces; index++) {
 
                 // get the indexes of the coordinates of each vertex of the facet
@@ -2375,6 +2402,12 @@
                     if (!(block_idx_o == block_idx_v1 || block_idx_o == block_idx_v2 || block_idx_o == block_idx_v3)) {
                         options.facetPartitioning[block_idx_o].push(index);
                     }
+                }
+
+                if (computeDepthSort && options && options.facetPositions) {
+                    var dsf = depthSortedFacets[index];
+                    dsf.ind = index * 3;
+                    dsf.sqDistance = Vector3.DistanceSquared(options.facetPositions[index], distanceTo!)
                 }
 
                 // compute the normals anyway

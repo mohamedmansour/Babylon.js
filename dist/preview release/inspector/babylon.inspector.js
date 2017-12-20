@@ -301,6 +301,9 @@ var INSPECTOR;
             else {
                 // Create popup
                 var popup = window.open('', 'Babylon.js INSPECTOR', 'toolbar=no,resizable=yes,menubar=no,width=750,height=1000');
+                if (!popup) {
+                    return;
+                }
                 popup.document.title = 'Babylon.js INSPECTOR';
                 // Get the inspector style      
                 var styles = Inspector.DOCUMENT.querySelectorAll('style');
@@ -371,17 +374,14 @@ var INSPECTOR;
         },
         'Vector2': {
             type: BABYLON.Vector2,
-            properties: ['x', 'y'],
             format: function (vec) { return "x:" + INSPECTOR.Helpers.Trunc(vec.x) + ", y:" + INSPECTOR.Helpers.Trunc(vec.y); }
         },
         'Vector3': {
             type: BABYLON.Vector3,
-            properties: ['x', 'y', 'z'],
             format: function (vec) { return "x:" + INSPECTOR.Helpers.Trunc(vec.x) + ", y:" + INSPECTOR.Helpers.Trunc(vec.y) + ", z:" + INSPECTOR.Helpers.Trunc(vec.z); }
         },
         'Color3': {
             type: BABYLON.Color3,
-            properties: ['r', 'g', 'b'],
             format: function (color) { return "R:" + color.r + ", G:" + color.g + ", B:" + color.b; },
             slider: {
                 r: { min: 0, max: 1, step: 0.01 },
@@ -391,7 +391,6 @@ var INSPECTOR;
         },
         'Color4': {
             type: BABYLON.Color4,
-            properties: ['r', 'g', 'b'],
             format: function (color) { return "R:" + color.r + ", G:" + color.g + ", B:" + color.b; },
             slider: {
                 r: { min: 0, max: 1, step: 0.01 },
@@ -400,30 +399,14 @@ var INSPECTOR;
             }
         },
         'Quaternion': {
-            type: BABYLON.Quaternion,
-            properties: ['x', 'y', 'z', 'w']
+            type: BABYLON.Quaternion
         },
         'Size': {
             type: BABYLON.Size,
-            properties: ['width', 'height'],
             format: function (size) { return "Size - w:" + INSPECTOR.Helpers.Trunc(size.width) + ", h:" + INSPECTOR.Helpers.Trunc(size.height); }
         },
         'Texture': {
             type: BABYLON.Texture,
-            properties: [
-                'hasAlpha',
-                'level',
-                'name',
-                'wrapU',
-                'wrapV',
-                'uScale',
-                'vScale',
-                'uAng',
-                'vAng',
-                'wAng',
-                'uOffset',
-                'vOffset'
-            ],
             format: function (tex) { return tex.name; }
         },
         'RenderTargetTexture': {
@@ -442,43 +425,10 @@ var INSPECTOR;
             type: BABYLON.HDRCubeTexture
         },
         'Sound': {
-            type: BABYLON.Sound,
-            properties: [
-                'name',
-                'autoplay',
-                'loop',
-                'useCustomAttenuation',
-                'soundTrackId',
-                'spatialSound',
-                'refDistance',
-                'rolloffFactor',
-                'maxDistance',
-                'distanceModel',
-                'isPlaying',
-                'isPaused'
-            ]
+            type: BABYLON.Sound
         },
         'ArcRotateCamera': {
             type: BABYLON.ArcRotateCamera,
-            properties: [
-                'position',
-                'alpha',
-                'beta',
-                'radius',
-                'angularSensibilityX',
-                'angularSensibilityY',
-                'target',
-                'lowerAlphaLimit',
-                'lowerBetaLimit',
-                'upperAlphaLimit',
-                'upperBetaLimit',
-                'lowerRadiusLimit',
-                'upperRadiusLimit',
-                'pinchPrecision',
-                'wheelPrecision',
-                'allowUpsideDown',
-                'checkCollisions'
-            ],
             slider: {
                 alpha: { min: 0, max: 2 * Math.PI, step: 0.01 },
                 beta: { min: -Math.PI, max: Math.PI, step: 0.01 },
@@ -487,97 +437,23 @@ var INSPECTOR;
         },
         'FreeCamera': {
             type: BABYLON.FreeCamera,
-            properties: [
-                'position',
-                'rotation',
-                'rotationQuaternion',
-                'cameraDirection',
-                'cameraRotation',
-                'ellipsoid',
-                'applyGravity',
-                'angularSensibility',
-                'keysUp',
-                'keysDown',
-                'keysLeft',
-                'keysRight',
-                'checkCollisions',
-                'speed',
-                'lockedTarget',
-                'noRotationConstraint',
-                'fov',
-                'inertia',
-                'minZ', 'maxZ',
-                'layerMask',
-                'mode',
-                'orthoBottom',
-                'orthoTop',
-                'orthoLeft',
-                'orthoRight'
-            ],
             slider: {
                 fov: { min: 0, max: 180, step: 1 }
             }
         },
         'Scene': {
             type: BABYLON.Scene,
-            properties: [
-                'actionManager',
-                'activeCamera',
-                'ambientColor',
-                'clearColor',
-                'forceWireframe',
-                'forcePointsCloud',
-                'forceShowBoundingBoxes',
-                'useRightHandedSystem',
-                'hoverCursor',
-                'cameraToUseForPointers',
-                'fogEnabled',
-                'fogColor',
-                'fogDensity',
-                'fogStart',
-                'fogEnd',
-                'shadowsEnabled',
-                'lightsEnabled',
-                'collisionsEnabled',
-                'gravity',
-                'meshUnderPointer',
-                'pointerX',
-                'pointerY',
-                'uid'
-            ]
+        },
+        'TransformNode': {
+            type: BABYLON.TransformNode,
+            format: function (m) { return m.name; }
+        },
+        'AbstractMesh': {
+            type: BABYLON.AbstractMesh,
+            format: function (m) { return m.name; }
         },
         'Mesh': {
             type: BABYLON.Mesh,
-            properties: [
-                'name',
-                'position',
-                'rotation',
-                'rotationQuaternion',
-                'absolutePosition',
-                'material',
-                'actionManager',
-                'visibility',
-                'isVisible',
-                'isPickable',
-                'renderingGroupId',
-                'receiveShadows',
-                'renderOutline',
-                'outlineColor',
-                'outlineWidth',
-                'renderOverlay',
-                'overlayColor',
-                'overlayAlpha',
-                'hasVertexAlpha',
-                'useVertexColors',
-                'layerMask',
-                'alwaysSelectAsActiveMesh',
-                'ellipsoid',
-                'ellipsoidOffset',
-                'edgesWidth',
-                'edgesColor',
-                'checkCollisions',
-                'hasLODLevels'
-            ],
             format: function (m) { return m.name; },
             slider: {
                 visibility: { min: 0, max: 1, step: 0.1 }
@@ -585,36 +461,6 @@ var INSPECTOR;
         },
         'StandardMaterial': {
             type: BABYLON.StandardMaterial,
-            properties: [
-                'name',
-                'alpha',
-                'alphaMode',
-                'wireframe',
-                'isFrozen',
-                'zOffset',
-                'ambientColor',
-                'emissiveColor',
-                'diffuseColor',
-                'specularColor',
-                'specularPower',
-                'useAlphaFromDiffuseTexture',
-                'linkEmissiveWithDiffuse',
-                'useSpecularOverAlpha',
-                'diffuseFresnelParameters',
-                'opacityFresnelParameters',
-                'reflectionFresnelParameters',
-                'refractionFresnelParameters',
-                'emissiveFresnelParameters',
-                'diffuseTexture',
-                'emissiveTexture',
-                'specularTexture',
-                'ambientTexture',
-                'bumpTexture',
-                'lightMapTexture',
-                'opacityTexture',
-                'reflectionTexture',
-                'refractionTexture'
-            ],
             format: function (mat) { return mat.name; },
             slider: {
                 alpha: { min: 0, max: 1, step: 0.01 }
@@ -622,52 +468,12 @@ var INSPECTOR;
         },
         'PBRMaterial': {
             type: BABYLON.PBRMaterial,
-            properties: [
-                'name',
-                'albedoColor',
-                'albedoTexture',
-                'opacityTexture',
-                'reflectionTexture',
-                'emissiveTexture',
-                'bumpTexture',
-                'lightmapTexture',
-                'opacityFresnelParameters',
-                'emissiveFresnelParameters',
-                'linkEmissiveWithAlbedo',
-                'useLightmapAsShadowmap',
-                'useAlphaFromAlbedoTexture',
-                'useSpecularOverAlpha',
-                'useAutoMicroSurfaceFromReflectivityMap',
-                'useLogarithmicDepth',
-                'reflectivityColor',
-                'reflectivityTexture',
-                'reflectionTexture',
-                'reflectionColor',
-                'alpha',
-                'linkRefractionWithTransparency',
-                'indexOfRefraction',
-                'microSurface',
-                'useMicroSurfaceFromReflectivityMapAlpha',
-                'directIntensity',
-                'emissiveIntensity',
-                'specularIntensity',
-                'environmentIntensity',
-                'cameraExposure',
-                'cameraContrast',
-                'cameraColorGradingTexture',
-                'cameraColorCurves'
-            ],
             slider: {
                 alpha: { min: 0, max: 1, step: 0.01 }
             }
         },
         'PhysicsImpostor': {
-            type: BABYLON.PhysicsImpostor,
-            properties: [
-                'friction',
-                'mass',
-                'restitution',
-            ]
+            type: BABYLON.PhysicsImpostor
         },
     };
 })(INSPECTOR || (INSPECTOR = {}));
@@ -831,14 +637,6 @@ var INSPECTOR;
         function Adapter(obj) {
             this._obj = obj;
         }
-        Object.defineProperty(Adapter.prototype, "actualObject", {
-            /** Returns the actual object behind this adapter */
-            get: function () {
-                return this._obj;
-            },
-            enumerable: true,
-            configurable: true
-        });
         /** Returns true if the given object correspond to this  */
         Adapter.prototype.correspondsTo = function (obj) {
             return obj === this._obj;
@@ -1242,8 +1040,8 @@ var INSPECTOR;
 (function (INSPECTOR) {
     var MeshAdapter = /** @class */ (function (_super) {
         __extends(MeshAdapter, _super);
-        function MeshAdapter(obj) {
-            return _super.call(this, obj) || this;
+        function MeshAdapter(mesh) {
+            return _super.call(this, mesh) || this;
         }
         /** Returns the name displayed in the tree */
         MeshAdapter.prototype.id = function () {
@@ -1265,8 +1063,10 @@ var INSPECTOR;
             var tools = [];
             tools.push(new INSPECTOR.Checkbox(this));
             tools.push(new INSPECTOR.DebugArea(this));
-            if (this._obj.getTotalVertices() > 0) {
-                tools.push(new INSPECTOR.BoundingBox(this));
+            if (this._obj instanceof BABYLON.AbstractMesh) {
+                if (this._obj.getTotalVertices() > 0) {
+                    tools.push(new INSPECTOR.BoundingBox(this));
+                }
             }
             tools.push(new INSPECTOR.Info(this));
             return tools;
@@ -1276,7 +1076,7 @@ var INSPECTOR;
             this._obj.isVisible = b;
         };
         MeshAdapter.prototype.isVisible = function () {
-            return this._obj.isEnabled() && this._obj.isVisible;
+            return this._obj.isEnabled() && (this._obj.isVisible === undefined || this._obj.isVisible);
         };
         MeshAdapter.prototype.isBoxVisible = function () {
             return this._obj.showBoundingBox;
@@ -1284,33 +1084,47 @@ var INSPECTOR;
         MeshAdapter.prototype.setBoxVisible = function (b) {
             return this._obj.showBoundingBox = b;
         };
-        MeshAdapter.prototype.debug = function (b) {
+        MeshAdapter.prototype.debug = function (enable) {
             // Draw axis the first time
             if (!this._axesViewer) {
                 this._drawAxis();
             }
             // Display or hide axis
-            if (!b && this._axesViewer) {
+            if (!enable && this._axesViewer) {
+                var mesh = this._obj;
+                mesh.getScene().onBeforeRenderObservable.remove(this.onBeforeRenderObserver);
                 this._axesViewer.dispose();
                 this._axesViewer = null;
             }
         };
         /** Returns some information about this mesh */
         MeshAdapter.prototype.getInfo = function () {
-            return this._obj.getTotalVertices() + " vertices";
+            if (this._obj instanceof BABYLON.AbstractMesh) {
+                return this._obj.getTotalVertices() + " vertices";
+            }
+            return '0 vertices';
         };
         /** Draw X, Y and Z axis for the actual object if this adapter.
          * Should be called only one time as it will fill this._axis
          */
         MeshAdapter.prototype._drawAxis = function () {
+            var _this = this;
             this._obj.computeWorldMatrix();
-            var mesh = this._obj;
             // Axis
-            var x = new BABYLON.Vector3(8 / Math.abs(mesh.scaling.x), 0, 0);
-            var y = new BABYLON.Vector3(0, 8 / Math.abs(mesh.scaling.y), 0);
-            var z = new BABYLON.Vector3(0, 0, 8 / Math.abs(mesh.scaling.z));
+            var x = new BABYLON.Vector3(1, 0, 0);
+            var y = new BABYLON.Vector3(0, 1, 0);
+            var z = new BABYLON.Vector3(0, 0, 1);
             this._axesViewer = new BABYLON.Debug.AxesViewer(this._obj.getScene());
-            this._axesViewer.update(this._obj.position, x, y, z);
+            var mesh = this._obj;
+            this.onBeforeRenderObserver = mesh.getScene().onBeforeRenderObservable.add(function () {
+                var matrix = mesh.getWorldMatrix();
+                var extend = new BABYLON.Vector3(1, 1, 1);
+                if (mesh instanceof BABYLON.AbstractMesh) {
+                    extend = mesh.getBoundingInfo().boundingBox.extendSizeWorld;
+                }
+                _this._axesViewer.scaleLines = Math.max(extend.x, extend.y, extend.z) * 2;
+                _this._axesViewer.update(_this._obj.position, BABYLON.Vector3.TransformNormal(x, matrix), BABYLON.Vector3.TransformNormal(y, matrix), BABYLON.Vector3.TransformNormal(z, matrix));
+            });
         };
         return MeshAdapter;
     }(INSPECTOR.Adapter));
@@ -1748,8 +1562,9 @@ var INSPECTOR;
         PropertyLine.prototype._createElements = function () {
             // Colors
             if (this.type == 'Color3' || this.type == 'Color4') {
-                this._elements.push(new INSPECTOR.ColorPickerElement(this.value, this));
-                //this._elements.push(new ColorElement(this.value));
+                if (!INSPECTOR.Helpers.IsBrowserIE()) {
+                    this._elements.push(new INSPECTOR.ColorPickerElement(this.value, this));
+                }
             }
             // Texture
             if (this.type == 'Texture') {
@@ -1883,7 +1698,15 @@ var INSPECTOR;
                 this._div.classList.toggle('unfolded');
                 if (this._children.length == 0) {
                     var objToDetail = this.value;
-                    var propToDisplay = INSPECTOR.PROPERTIES[INSPECTOR.Helpers.GET_TYPE(objToDetail)].properties.slice().reverse();
+                    // Display all properties that are not functions
+                    var propToDisplay = INSPECTOR.Helpers.GetAllLinesPropertiesAsString(objToDetail);
+                    // special case for color3
+                    if ((propToDisplay.indexOf('r') && propToDisplay.indexOf('g') && propToDisplay.indexOf('b')) == 0) {
+                        propToDisplay.sort();
+                    }
+                    else {
+                        propToDisplay.sort().reverse();
+                    }
                     for (var _b = 0, propToDisplay_1 = propToDisplay; _b < propToDisplay_1.length; _b++) {
                         var prop = propToDisplay_1[_b];
                         var infos = new INSPECTOR.Property(prop, this._property.value);
@@ -2437,6 +2260,14 @@ var INSPECTOR;
             return regexp.test(navigator.userAgent);
         };
         /**
+         * Returns true if the user browser is IE.
+         */
+        Helpers.IsBrowserIE = function () {
+            //Detect if we are running on a faulty buggy OS.
+            var regexp = /Trident.*rv\:11\./;
+            return regexp.test(navigator.userAgent);
+        };
+        /**
          * Returns the name of the type of the given object, where the name
          * is in PROPERTIES constant.
          * Returns 'Undefined' if no type exists for this object
@@ -2474,6 +2305,9 @@ var INSPECTOR;
         };
         /** Returns the given number with 2 decimal number max if a decimal part exists */
         Helpers.Trunc = function (nb) {
+            if (typeof nb !== 'number') {
+                return 0;
+            }
             if (Math.round(nb) !== nb) {
                 return nb.toFixed(2);
             }
@@ -2558,16 +2392,28 @@ var INSPECTOR;
          */
         Helpers.GetAllLinesProperties = function (obj) {
             var propertiesLines = [];
-            for (var prop in obj) {
-                /**
-                 * No private and no function
-                 */
-                if (prop.substring(0, 1) !== '_' && typeof obj[prop] !== 'function') {
-                    var infos = new INSPECTOR.Property(prop, obj);
-                    propertiesLines.push(new INSPECTOR.PropertyLine(infos));
-                }
+            var props = Helpers.GetAllLinesPropertiesAsString(obj);
+            for (var _i = 0, props_1 = props; _i < props_1.length; _i++) {
+                var prop = props_1[_i];
+                var infos = new INSPECTOR.Property(prop, obj);
+                propertiesLines.push(new INSPECTOR.PropertyLine(infos));
             }
             return propertiesLines;
+        };
+        /**
+         * Returns an array of string corresponding to tjhe list of properties of the object to be displayed
+         * @param obj
+         */
+        Helpers.GetAllLinesPropertiesAsString = function (obj, dontTakeThis) {
+            if (dontTakeThis === void 0) { dontTakeThis = []; }
+            var props = [];
+            for (var prop in obj) {
+                //No private and no function
+                if (dontTakeThis.indexOf(prop) === -1 && prop.substring(0, 1) !== '_' && typeof obj[prop] !== 'function') {
+                    props.push(prop);
+                }
+            }
+            return props;
         };
         Helpers.Capitalize = function (str) {
             return str.charAt(0).toUpperCase() + str.slice(1);
@@ -2585,7 +2431,7 @@ var INSPECTOR;
             this.pause = false;
             /** The list of data to update */
             this._updatableProperties = [];
-            this._timer = setInterval(this._update.bind(this), Scheduler.REFRESH_TIME);
+            setInterval(this._update.bind(this), Scheduler.REFRESH_TIME);
         }
         Scheduler.getInstance = function () {
             if (!Scheduler._instance) {
@@ -3281,7 +3127,7 @@ var INSPECTOR;
                 if (descendants.length > 0) {
                     for (var _i = 0, descendants_1 = descendants; _i < descendants_1.length; _i++) {
                         var child = descendants_1[_i];
-                        if (child instanceof BABYLON.AbstractMesh) {
+                        if (child instanceof BABYLON.TransformNode) {
                             if (!INSPECTOR.Helpers.IsSystemName(child.name)) {
                                 var n = createNode(child);
                                 node.add(n);
@@ -3309,8 +3155,25 @@ var INSPECTOR;
             };
             // get all meshes from the first scene
             var instances = this._inspector.scene;
+            // Find top of hierarchy for meshes...
+            var meshWithoutAnyParent = [];
             for (var _i = 0, _a = instances.meshes; _i < _a.length; _i++) {
                 var mesh = _a[_i];
+                // Not already in the array, not system name and no parent
+                if (meshWithoutAnyParent.indexOf(mesh) == -1 && !INSPECTOR.Helpers.IsSystemName(mesh.name) && !mesh.parent) {
+                    meshWithoutAnyParent.push(mesh);
+                }
+            }
+            // ... and for transforms
+            for (var _b = 0, _c = instances.transformNodes; _b < _c.length; _b++) {
+                var tn = _c[_b];
+                // Not already in the array, not system name and no parent
+                if (meshWithoutAnyParent.indexOf(tn) == -1 && !INSPECTOR.Helpers.IsSystemName(tn.name) && !tn.parent) {
+                    meshWithoutAnyParent.push(tn);
+                }
+            }
+            for (var _d = 0, meshWithoutAnyParent_1 = meshWithoutAnyParent; _d < meshWithoutAnyParent_1.length; _d++) {
+                var mesh = meshWithoutAnyParent_1[_d];
                 if (alreadyIn.indexOf(mesh) == -1 && !INSPECTOR.Helpers.IsSystemName(mesh.name)) {
                     var node = createNode(mesh);
                     arr.push(node);
@@ -3349,9 +3212,13 @@ var INSPECTOR;
             _this._panel.appendChild(_this._detailsPanel.toHtml());
             // build propertiesline
             var details = [];
-            for (var _i = 0, _a = INSPECTOR.PROPERTIES['Scene'].properties; _i < _a.length; _i++) {
-                var prop = _a[_i];
-                details.push(new INSPECTOR.PropertyLine(new INSPECTOR.Property(prop, _this._inspector.scene)));
+            // Remove deprecated properties generating warning in console
+            var dontTakeThis = ['interFramePerfCounter', 'lastFramePerfCounter', 'evaluateActiveMeshesDurationPerfCounter', 'renderDurationPerfCounter', 'particlesDurationPerfCounter', 'spriteDuractionPerfCounter'];
+            var props = INSPECTOR.Helpers.GetAllLinesPropertiesAsString(_this._inspector.scene, dontTakeThis);
+            for (var _i = 0, props_1 = props; _i < props_1.length; _i++) {
+                var propString = props_1[_i];
+                var prop = new INSPECTOR.PropertyLine(new INSPECTOR.Property(propString, _this._inspector.scene));
+                details.push(prop);
             }
             _this._detailsPanel.details = details;
             Split([_this._actions, _this._detailsPanel.toHtml()], {
@@ -3669,18 +3536,7 @@ var INSPECTOR;
             _this._scene = _this._inspector.scene;
             _this._engine = _this._scene.getEngine();
             _this._glInfo = _this._engine.getGlInfo();
-            _this._sceneInstrumentation = new BABYLON.SceneInstrumentation(_this._scene);
-            _this._sceneInstrumentation.captureActiveMeshesEvaluationTime = true;
-            _this._sceneInstrumentation.captureRenderTargetsRenderTime = true;
-            _this._sceneInstrumentation.captureFrameTime = true;
-            _this._sceneInstrumentation.captureRenderTime = true;
-            _this._sceneInstrumentation.captureInterFrameTime = true;
-            _this._sceneInstrumentation.captureParticlesRenderTime = true;
-            _this._sceneInstrumentation.captureSpritesRenderTime = true;
-            _this._sceneInstrumentation.capturePhysicsTime = true;
-            _this._sceneInstrumentation.captureAnimationsTime = true;
-            _this._engineInstrumentation = new BABYLON.EngineInstrumentation(_this._engine);
-            _this._engineInstrumentation.captureGPUFrameTime = true;
+            _this._connectToInstrumentation();
             // Build the stats panel: a div that will contains all stats
             _this._panel = INSPECTOR.Helpers.CreateDiv('tab-panel');
             _this._panel.classList.add("stats-panel");
@@ -3699,61 +3555,61 @@ var INSPECTOR;
             title = INSPECTOR.Helpers.CreateDiv('stat-title2', _this._panel);
             title.textContent = "Count";
             {
-                var elemLabel = _this._createStatLabel("Total meshes", _this._panel);
+                _this._createStatLabel("Total meshes", _this._panel);
                 var elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return _this._scene.meshes.length.toString(); }
                 });
-                elemLabel = _this._createStatLabel("Draw calls", _this._panel);
+                _this._createStatLabel("Draw calls", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return _this._sceneInstrumentation.drawCallsCounter.current.toString(); }
                 });
-                elemLabel = _this._createStatLabel("Total lights", _this._panel);
+                _this._createStatLabel("Total lights", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return _this._scene.lights.length.toString(); }
                 });
-                elemLabel = _this._createStatLabel("Total vertices", _this._panel);
+                _this._createStatLabel("Total vertices", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return _this._scene.getTotalVertices().toString(); }
                 });
-                elemLabel = _this._createStatLabel("Total materials", _this._panel);
+                _this._createStatLabel("Total materials", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return _this._scene.materials.length.toString(); }
                 });
-                elemLabel = _this._createStatLabel("Total textures", _this._panel);
+                _this._createStatLabel("Total textures", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return _this._scene.textures.length.toString(); }
                 });
-                elemLabel = _this._createStatLabel("Active meshes", _this._panel);
+                _this._createStatLabel("Active meshes", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return _this._scene.getActiveMeshes().length.toString(); }
                 });
-                elemLabel = _this._createStatLabel("Active indices", _this._panel);
+                _this._createStatLabel("Active indices", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return _this._scene.getActiveIndices().toString(); }
                 });
-                elemLabel = _this._createStatLabel("Active bones", _this._panel);
+                _this._createStatLabel("Active bones", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return _this._scene.getActiveBones().toString(); }
                 });
-                elemLabel = _this._createStatLabel("Active particles", _this._panel);
+                _this._createStatLabel("Active particles", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
@@ -3763,79 +3619,79 @@ var INSPECTOR;
             title = INSPECTOR.Helpers.CreateDiv('stat-title2', _this._panel);
             title.textContent = "Duration";
             {
-                var elemLabel = _this._createStatLabel("Meshes selection", _this._panel);
+                _this._createStatLabel("Meshes selection", _this._panel);
                 var elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return BABYLON.Tools.Format(_this._sceneInstrumentation.activeMeshesEvaluationTimeCounter.current); }
                 });
-                elemLabel = _this._createStatLabel("Render targets", _this._panel);
+                _this._createStatLabel("Render targets", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return BABYLON.Tools.Format(_this._sceneInstrumentation.renderTargetsRenderTimeCounter.current); }
                 });
-                elemLabel = _this._createStatLabel("Particles", _this._panel);
+                _this._createStatLabel("Particles", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return BABYLON.Tools.Format(_this._sceneInstrumentation.particlesRenderTimeCounter.current); }
                 });
-                elemLabel = _this._createStatLabel("Sprites", _this._panel);
+                _this._createStatLabel("Sprites", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return BABYLON.Tools.Format(_this._sceneInstrumentation.spritesRenderTimeCounter.current); }
                 });
-                elemLabel = _this._createStatLabel("Animations", _this._panel);
+                _this._createStatLabel("Animations", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return BABYLON.Tools.Format(_this._sceneInstrumentation.animationsTimeCounter.current); }
                 });
-                elemLabel = _this._createStatLabel("Physics", _this._panel);
+                _this._createStatLabel("Physics", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return BABYLON.Tools.Format(_this._sceneInstrumentation.physicsTimeCounter.current); }
                 });
-                elemLabel = _this._createStatLabel("Render", _this._panel);
+                _this._createStatLabel("Render", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return BABYLON.Tools.Format(_this._sceneInstrumentation.renderTimeCounter.current); }
                 });
-                elemLabel = _this._createStatLabel("Frame", _this._panel);
+                _this._createStatLabel("Frame", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return BABYLON.Tools.Format(_this._sceneInstrumentation.frameTimeCounter.current); }
                 });
-                elemLabel = _this._createStatLabel("Inter-frame", _this._panel);
+                _this._createStatLabel("Inter-frame", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return BABYLON.Tools.Format(_this._sceneInstrumentation.interFrameTimeCounter.current); }
                 });
-                elemLabel = _this._createStatLabel("GPU Frame time", _this._panel);
+                _this._createStatLabel("GPU Frame time", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return BABYLON.Tools.Format(_this._engineInstrumentation.gpuFrameTimeCounter.current * 0.000001); }
                 });
-                elemLabel = _this._createStatLabel("GPU Frame time (average)", _this._panel);
+                _this._createStatLabel("GPU Frame time (average)", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return BABYLON.Tools.Format(_this._engineInstrumentation.gpuFrameTimeCounter.average * 0.000001); }
                 });
-                elemLabel = _this._createStatLabel("Potential FPS", _this._panel);
+                _this._createStatLabel("Potential FPS", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return BABYLON.Tools.Format(1000.0 / _this._sceneInstrumentation.frameTimeCounter.current, 0); }
                 });
-                elemLabel = _this._createStatLabel("Resolution", _this._panel);
+                _this._createStatLabel("Resolution", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
@@ -3845,61 +3701,61 @@ var INSPECTOR;
             title = INSPECTOR.Helpers.CreateDiv('stat-title2', _this._panel);
             title.textContent = "Extensions";
             {
-                var elemLabel = _this._createStatLabel("Std derivatives", _this._panel);
+                _this._createStatLabel("Std derivatives", _this._panel);
                 var elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return (_this._engine.getCaps().standardDerivatives ? "Yes" : "No"); }
                 });
-                elemLabel = _this._createStatLabel("Compressed textures", _this._panel);
+                _this._createStatLabel("Compressed textures", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return (_this._engine.getCaps().s3tc ? "Yes" : "No"); }
                 });
-                elemLabel = _this._createStatLabel("Hardware instances", _this._panel);
+                _this._createStatLabel("Hardware instances", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return (_this._engine.getCaps().instancedArrays ? "Yes" : "No"); }
                 });
-                elemLabel = _this._createStatLabel("Texture float", _this._panel);
+                _this._createStatLabel("Texture float", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return (_this._engine.getCaps().textureFloat ? "Yes" : "No"); }
                 });
-                elemLabel = _this._createStatLabel("32bits indices", _this._panel);
+                _this._createStatLabel("32bits indices", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return (_this._engine.getCaps().uintIndices ? "Yes" : "No"); }
                 });
-                elemLabel = _this._createStatLabel("Fragment depth", _this._panel);
+                _this._createStatLabel("Fragment depth", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return (_this._engine.getCaps().fragmentDepthSupported ? "Yes" : "No"); }
                 });
-                elemLabel = _this._createStatLabel("High precision shaders", _this._panel);
+                _this._createStatLabel("High precision shaders", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return (_this._engine.getCaps().highPrecisionShaderSupported ? "Yes" : "No"); }
                 });
-                elemLabel = _this._createStatLabel("Draw buffers", _this._panel);
+                _this._createStatLabel("Draw buffers", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return (_this._engine.getCaps().drawBuffersExtension ? "Yes" : "No"); }
                 });
-                elemLabel = _this._createStatLabel("Vertex array object", _this._panel);
+                _this._createStatLabel("Vertex array object", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return (_this._engine.getCaps().vertexArrayObject ? "Yes" : "No"); }
                 });
-                elemLabel = _this._createStatLabel("Timer query", _this._panel);
+                _this._createStatLabel("Timer query", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
@@ -3909,25 +3765,25 @@ var INSPECTOR;
             title = INSPECTOR.Helpers.CreateDiv('stat-title2', _this._panel);
             title.textContent = "Caps.";
             {
-                var elemLabel = _this._createStatLabel("Stencil", _this._panel);
+                _this._createStatLabel("Stencil", _this._panel);
                 var elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return (_this._engine.isStencilEnable ? "Enabled" : "Disabled"); }
                 });
-                elemLabel = _this._createStatLabel("Max textures units", _this._panel);
+                _this._createStatLabel("Max textures units", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return _this._engine.getCaps().maxTexturesImageUnits.toString(); }
                 });
-                elemLabel = _this._createStatLabel("Max textures size", _this._panel);
+                _this._createStatLabel("Max textures size", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
                     updateFct: function () { return _this._engine.getCaps().maxTextureSize.toString(); }
                 });
-                elemLabel = _this._createStatLabel("Max anisotropy", _this._panel);
+                _this._createStatLabel("Max anisotropy", _this._panel);
                 elemValue = INSPECTOR.Helpers.CreateDiv('stat-value', _this._panel);
                 _this._updatableProperties.push({
                     elem: elemValue,
@@ -3945,6 +3801,23 @@ var INSPECTOR;
             }
             return _this;
         }
+        StatsTab.prototype._connectToInstrumentation = function () {
+            if (this._sceneInstrumentation) {
+                return;
+            }
+            this._sceneInstrumentation = new BABYLON.SceneInstrumentation(this._scene);
+            this._sceneInstrumentation.captureActiveMeshesEvaluationTime = true;
+            this._sceneInstrumentation.captureRenderTargetsRenderTime = true;
+            this._sceneInstrumentation.captureFrameTime = true;
+            this._sceneInstrumentation.captureRenderTime = true;
+            this._sceneInstrumentation.captureInterFrameTime = true;
+            this._sceneInstrumentation.captureParticlesRenderTime = true;
+            this._sceneInstrumentation.captureSpritesRenderTime = true;
+            this._sceneInstrumentation.capturePhysicsTime = true;
+            this._sceneInstrumentation.captureAnimationsTime = true;
+            this._engineInstrumentation = new BABYLON.EngineInstrumentation(this._engine);
+            this._engineInstrumentation.captureGPUFrameTime = true;
+        };
         StatsTab.prototype._createStatLabel = function (content, parent) {
             var elem = INSPECTOR.Helpers.CreateDiv('stat-label', parent);
             elem.textContent = content;
@@ -3960,10 +3833,14 @@ var INSPECTOR;
         StatsTab.prototype.dispose = function () {
             this._scene.unregisterAfterRender(this._updateLoopHandler);
             this._sceneInstrumentation.dispose();
+            this._sceneInstrumentation = null;
+            this._engineInstrumentation.dispose();
+            this._engineInstrumentation = null;
         };
         StatsTab.prototype.active = function (b) {
             _super.prototype.active.call(this, b);
             if (b) {
+                this._connectToInstrumentation();
                 this._scene.registerAfterRender(this._updateLoopHandler);
             }
         };
@@ -4682,6 +4559,13 @@ var INSPECTOR;
         /** Build the HTML of this item */
         TreeItem.prototype._build = function () {
             this._div.className = 'line';
+            // special class for transform node ONLY
+            if (this.adapter instanceof INSPECTOR.MeshAdapter) {
+                var obj = this.adapter.object;
+                if (obj instanceof BABYLON.TransformNode && !(obj instanceof BABYLON.AbstractMesh)) {
+                    this._div.className += ' transformNode';
+                }
+            }
             for (var _i = 0, _a = this._tools; _i < _a.length; _i++) {
                 var tool = _a[_i];
                 this._div.appendChild(tool.toHtml());
@@ -4906,7 +4790,6 @@ var INSPECTOR;
         function SoundInteractions(playSound) {
             var _this = _super.call(this) || this;
             _this.playSound = playSound;
-            _this.b = false;
             _this._elem.classList.add('fa-play');
             return _this;
         }
@@ -5045,7 +4928,7 @@ var INSPECTOR;
             var _this = _super.call(this) || this;
             _this._obj = obj;
             _this._elem.classList.add('fa-info-circle');
-            _this._tooltip = new INSPECTOR.Tooltip(_this._elem, _this._obj.getInfo(), _this._elem);
+            new INSPECTOR.Tooltip(_this._elem, _this._obj.getInfo(), _this._elem);
             return _this;
         }
         // Nothing to do on click

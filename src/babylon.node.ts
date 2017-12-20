@@ -114,7 +114,19 @@
                 return this;
             }
 
-            behavior.attach(this);
+            behavior.init();
+            if (this._scene.isLoading) {
+                // We defer the attach when the scene will be loaded
+                var observer = this._scene.onDataLoadedObservable.add(() => {
+                    behavior.attach(this);
+                    setTimeout(() => {
+                        // Need to use a timeout to avoid removing an observer while iterating the list of observers
+                        this._scene.onDataLoadedObservable.remove(observer);
+                    }, 0);
+                });
+            } else {
+                behavior.attach(this);
+            }
             this._behaviors.push(behavior);
 
             return this;
@@ -312,10 +324,21 @@
         /**
          * Get all child-meshes of this node.
          */
-        public getChildMeshes(directDecendantsOnly?: boolean, predicate?: (node: Node) => boolean): AbstractMesh[] {
+        public getChildMeshes(directDescendantsOnly?: boolean, predicate?: (node: Node) => boolean): AbstractMesh[] {
             var results: Array<AbstractMesh> = [];
-            this._getDescendants(results, directDecendantsOnly, (node: Node) => {
+            this._getDescendants(results, directDescendantsOnly, (node: Node) => {
                 return ((!predicate || predicate(node)) && (node instanceof AbstractMesh));
+            });
+            return results;
+        }
+
+        /**
+         * Get all child-transformNodes of this node.
+         */
+        public getChildTransformNodes(directDescendantsOnly?: boolean, predicate?: (node: Node) => boolean): TransformNode[] {
+            var results: Array<TransformNode> = [];
+            this._getDescendants(results, directDescendantsOnly, (node: Node) => {
+                return ((!predicate || predicate(node)) && (node instanceof TransformNode));
             });
             return results;
         }
@@ -404,6 +427,11 @@
                 serializationRanges.push(range);
             }
             return serializationRanges;
+        }
+
+        // override it in derived class
+        public computeWorldMatrix(force?: boolean): Matrix {
+            return Matrix.Identity();
         }
 
         public dispose(): void {

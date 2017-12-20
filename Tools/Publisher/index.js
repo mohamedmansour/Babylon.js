@@ -35,6 +35,14 @@ let packages = [
     {
         name: 'proceduralTextures',
         path: basePath + '/proceduralTexturesLibrary/'
+    },
+    {
+        name: 'inspector',
+        path: basePath + '/inspector/'
+    },
+    {
+        name: 'viewer',
+        path: basePath + '/viewer/'
     }
 ];
 
